@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Smart Quiz Arena - Test Your Knowledge',
-  description: 'An adaptive quiz platform with intelligent insights and social learning',
+  title: 'Smart Quiz Arena - Master Your Skills',
+  description: 'An adaptive quiz platform with intelligent insights.',
 };
 
 export default function RootLayout({
@@ -16,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen`}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

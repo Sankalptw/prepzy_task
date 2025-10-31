@@ -20,7 +20,7 @@ console.log('   DB_NAME:', process.env.DB_NAME || 'NOT SET');
 console.log('   JWT_SECRET:', process.env.JWT_SECRET ? 'SET ✓' : 'NOT SET ✗');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 7000;
 
 // CORS Configuration
 app.use(
@@ -56,17 +56,19 @@ app.get('/', (req: Request, res: Response) => {
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
+      topics: '/api/topics',
+      quiz: '/api/quiz',
+      leaderboard: '/api/leaderboard',
       health: '/health',
     },
   });
 });
 
-// Authentication routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
-
 
 // 404 Handler
 app.use((req: Request, res: Response) => {
@@ -93,6 +95,10 @@ const startServer = async () => {
     console.log('\n🔄 Initializing database...');
     await initializeDatabase();
     console.log('✅ Database initialized successfully\n');
+
+    console.log('🌱 Seeding database with initial data...');
+    await seedDatabase();
+    console.log('✅ Database seeded successfully\n');
 
     app.listen(PORT, () => {
       console.log('=================================');

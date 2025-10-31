@@ -12,7 +12,30 @@ export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setIsDark(!isDark);
+    if (!isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -22,15 +45,10 @@ export default function DashboardPage() {
 
     const fetchTopics = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
         const response = await topicsAPI.getAll();
         setTopics(response.topics || []);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch topics';
         console.error('Failed to fetch topics:', error);
-        setError(errorMessage);
-        setTopics([]);
       } finally {
         setIsLoading(false);
       }
@@ -46,19 +64,15 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        <p>Loading topics...</p>
+      <div className="loading-container" style={{ minHeight: '100vh' }}>
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div>
+    <div style={{ minHeight: '100vh' }}>
       {/* Navbar */}
       <nav>
         <div className="nav-container">
@@ -66,14 +80,6 @@ export default function DashboardPage() {
             <span>🧠</span>
             <span>Smart Quiz Arena</span>
           </Link>
-          <div className="nav-links">
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-              Welcome, {user?.username}!
-            </span>
-            <button onClick={handleLogout} className="btn btn-secondary">
-              Logout
-            </button>
-          </div>
           <div className="nav-links">
             <Link href="/leaderboard" className="btn btn-secondary">🏆 Leaderboard</Link>
             <Link href="/profile" className="btn btn-secondary">👤 Profile</Link>
@@ -87,67 +93,56 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      {/* Dashboard Content */}
       <div className="container" style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
-        <div style={{ marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Choose a Topic
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>
-            Select a topic to start your quiz journey
+        <div className="page-header fade-in">
+          <div style={{ fontSize: '0.875rem', fontWeight: '600', color: 'var(--accent-orange)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem' }}>
+            Choose Your Challenge
+          </div>
+          <h1 className="page-title">Available Quiz Topics</h1>
+          <p className="page-subtitle">
+            Select a topic to start your quiz journey. Track your progress and compete with others!
           </p>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div style={{
-            backgroundColor: '#fee2e2',
-            borderLeft: '4px solid #dc2626',
-            padding: '1rem',
-            marginBottom: '2rem',
-            borderRadius: '0.375rem'
-          }}>
-            <p style={{ color: '#991b1b', margin: 0 }}>
-              <strong>Error:</strong> {error}
-            </p>
-            <p style={{ color: '#991b1b', margin: '0.5rem 0 0 0', fontSize: '0.875rem' }}>
-              Make sure your backend API is running and accessible.
-            </p>
+        {topics.length === 0 ? (
+          <div className="empty-state">
+            <p>No topics available yet.</p>
           </div>
-        )}
-
-        {/* Topics Grid */}
-        {!error && (
-          <div className="topics-grid">
-            {topics.map((topic) => (
+        ) : (
+          <div className="topics-grid slide-in-left">
+            {topics.map((topic, index) => (
               <Link
                 key={topic.id}
                 href={`/quiz/${topic.slug}`}
                 className="topic-card"
-                style={{ textDecoration: 'none' }}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="topic-icon">{topic.icon}</div>
+                <span className="topic-icon">{topic.icon}</span>
                 <h3 className="topic-title">{topic.name}</h3>
                 <p className="topic-description">{topic.description}</p>
                 <div className="topic-meta">
-                  <span className="topic-badge">{topic.difficulty}</span>
-                  <span className="topic-questions">{topic.question_count} questions</span>
+                  <span className={`topic-badge ${topic.difficulty}`}>
+                    {topic.difficulty}
+                  </span>
+                  <span className="topic-questions">
+                    {topic.question_count} questions
+                  </span>
                 </div>
               </Link>
             ))}
           </div>
         )}
-
-        {!error && topics.length === 0 && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '3rem', 
-            color: 'var(--text-secondary)' 
-          }}>
-            <p>No topics available yet.</p>
-          </div>
-        )}
       </div>
+
+      {/* Theme Toggle Button */}
+      <button
+        onClick={toggleTheme}
+        className="theme-toggle"
+        aria-label="Toggle theme"
+        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {isDark ? '☀️' : '🌙'}
+      </button>
     </div>
   );
 }
