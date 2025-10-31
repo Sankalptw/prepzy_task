@@ -11,17 +11,6 @@ export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, saltRounds);
 };
 
-/**
- * COMPARE PASSWORD
- * Why? We can't "unhash" a password
- * Instead, we hash the login attempt and compare hashes
- * 
- * How it works:
- * - User enters password during login
- * - We hash it the same way
- * - Compare with stored hash
- * - If they match = correct password!
- */
 export const comparePassword = async (
   password: string,
   hash: string
@@ -29,21 +18,6 @@ export const comparePassword = async (
   return await bcrypt.compare(password, hash);
 };
 
-/**
- * GENERATE JWT TOKEN
- * Why? Stateless authentication
- * Server doesn't need to "remember" logged-in users
- * Token itself contains user info (encrypted)
- * 
- * How it works:
- * - Takes user data (id, email, username)
- * - Encrypts it with secret key
- * - Creates a string token
- * - Token can be verified without database lookup!
- * 
- * Token structure: header.payload.signature
- * Example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM...
- */
 export const generateToken = (payload: JWTPayload): string => {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
@@ -51,21 +25,7 @@ export const generateToken = (payload: JWTPayload): string => {
   });
 };
 
-/**
- * VERIFY JWT TOKEN
- * Why? Check if token is valid and not tampered with
- * 
- * How it works:
- * - Takes token from request
- * - Uses secret key to decrypt
- * - Checks if expired or modified
- * - Returns user data if valid
- * 
- * Throws error if:
- * - Token expired
- * - Token signature doesn't match (was modified)
- * - Token format is wrong
- */
+
 export const verifyToken = (token: string): JWTPayload => {
   try {
     return jwt.verify(token, JWT_SECRET) as JWTPayload;
@@ -109,7 +69,7 @@ export const isValidPassword = (password: string): {
   const hasNumber = /[0-9]/.test(password);
 
   if (!hasUpperCase || !hasLowerCase || !hasNumber) {
-    errors.push('Password must contain uppercase, lowercase, and number');
+    errors.push('Password must contain uppercase, lowercase, and number, give a better password');
   }
 
   return {
