@@ -1,12 +1,12 @@
 import axios from 'axios';
-
+import { getToken } from './auth';
 /**
  * API Configuration
  * Central place for all API calls
  */
 
 // Base API URL - update this when deployed
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://srv-d42otmer433s73drh88g.onrender.com';
 
 // Create axios instance with defaults
 const api = axios.create({
