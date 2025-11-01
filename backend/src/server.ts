@@ -14,21 +14,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// FRONTEND origin(s)
+// Allowed Origins
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://prepzy-task-frontend-1.onrender.com").trim();
-const LOCAL_URL = "http://localhost:3000"; // dev fallback
+const LOCAL_URL = "http://localhost:3000";
 
-// ---------- Robust CORS middleware (safe for Render) ----------
+// ---------- CORS Middleware ----------
 app.use((req: Request, res: Response, next: NextFunction) => {
   const originHeader = (req.headers.origin || "").toString();
 
-  // Allow server-side calls (no origin) and allowed origins
+  // Allow server-side/no-origin + allowed origins
   if (!originHeader || originHeader === FRONTEND_URL || originHeader === LOCAL_URL) {
-    // If origin present, echo it; required when using credentials
     if (originHeader) {
       res.setHeader("Access-Control-Allow-Origin", originHeader);
     } else {
-      // fallback - set explicit allowed origin (helps some clients)
       res.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
     }
 
@@ -39,7 +37,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       "Content-Type, Authorization, X-Requested-With, Accept"
     );
 
-    // quick respond to preflight
     if (req.method === "OPTIONS") {
       return res.sendStatus(200);
     }
@@ -47,43 +44,39 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     return next();
   }
 
-  // Disallowed origin: respond 403 (don't throw)
-  console.warn("❌ CORS blocked origin:", originHeader);
+  console.warn("❌ CORS Blocked:", originHeader);
   return res.status(403).json({ success: false, message: "CORS blocked" });
 });
-// -----------------------------------------------------------------
+// --------------------------------------------------
+
+// ✅ Ensure Express handles OPTIONS too
+app.options("*", (req, res) => {
+  res.sendStatus(200);
+});
 
 // Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logger
+// Logger
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`📨 ${req.method} ${req.path} — Origin: ${req.headers.origin || "no-origin"}`);
+  console.log(`📨 ${req.method} ${req.url} | Origin: ${req.headers.origin || "none"}`);
   next();
 });
 
-// Health and root endpoints
+// Routes
 app.get("/health", (req: Request, res: Response) =>
-  res.status(200).json({ status: "UP", time: new Date().toISOString() })
+  res.json({ status: "UP", time: new Date().toISOString() })
 );
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
-    message: "Welcome to Smart Quiz Arena API",
-    version: "1.0.0",
+    message: "Smart Quiz Arena backend running ✅",
     frontend: FRONTEND_URL,
-    endpoints: {
-      auth: "/api/auth",
-      topics: "/api/topics",
-      quiz: "/api/quiz",
-      leaderboard: "/api/leaderboard",
-      health: "/health",
-    },
+    version: "1.0.0",
   });
 });
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/topics", topicRoutes);
 app.use("/api/quiz", quizRoutes);
@@ -104,51 +97,29 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server (DB init + optional seeding)
+// Start server
 const startServer = async () => {
   try {
-    console.log("\n🔄 Initializing database...");
+    console.log("🔄 Connecting to DB...");
     await initializeDatabase();
-    console.log("✅ Database initialized successfully\n");
+    console.log("✅ DB Connected");
 
     if (process.env.SKIP_SEED !== "true") {
-      console.log("🌱 Seeding database with initial data...");
+      console.log("🌱 Seeding DB...");
       await seedDatabase();
-      console.log("✅ Database seeded successfully\n");
+      console.log("✅ Seeding Complete");
     } else {
-      console.log("⏭ SKIP_SEED=true — skipping automatic seeding");
+      console.log("⏭ Skipping seed (SKIP_SEED=true)");
     }
 
     app.listen(PORT, () => {
-      console.log("=================================");
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-      console.log(`📡 API root: /`);
-      console.log(`🏥 Health: /health`);
-      console.log("=================================");
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌍 FRONTEND allowed: ${FRONTEND_URL}`);
     });
-  } catch (error) {
-    console.error("❌ Failed to start server:", error);
+  } catch (err) {
+    console.error("❌ Startup Failure:", err);
     process.exit(1);
   }
 };
 
 startServer();
-
-// graceful shutdown handlers (optional)
-process.on("SIGINT", () => {
-  console.log("\n🛑 Shutting down gracefully...");
-  process.exit(0);
-});
-process.on("SIGTERM", () => {
-  console.log("\n🛑 Shutting down gracefully...");
-  process.exit(0);
-});
-process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error);
-  process.exit(1);
-});
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
-  process.exit(1);
-});
