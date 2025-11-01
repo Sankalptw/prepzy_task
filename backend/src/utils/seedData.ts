@@ -1,4 +1,5 @@
-import { query } from '../config/database';
+// src/utils/seedData.ts
+import { initializeTables, query } from "../config/database";
 
 /**
  * SEED DATA
@@ -8,117 +9,70 @@ import { query } from '../config/database';
 
 export const seedDatabase = async () => {
   try {
-    console.log('🌱 Seeding database...');
+    console.log("🌱 Seeding database...");
 
-    // Check if data already exists
-    const topicsCheck = await query('SELECT COUNT(*) FROM topics');
-    if (parseInt(topicsCheck.rows[0].count) > 0) {
-      console.log('✅ Database already seeded, skipping...');
+    // Ensure extensions & tables exist first
+    await initializeTables();
+
+    // If topics already exist, skip topics & questions
+    const topicsCheck = await query("SELECT COUNT(*) FROM topics");
+    if (parseInt(topicsCheck.rows[0].count, 10) > 0) {
+      console.log("✅ Database already seeded, skipping...");
       return;
     }
 
-    // SEED TOPICS
+    // SEED TOPICS (idempotent using slug unique + ON CONFLICT DO NOTHING)
     const topics = [
-      {
-        name: 'JavaScript',
-        slug: 'javascript',
-        description: 'Test your JavaScript fundamentals and ES6+ features',
-        icon: '⚡',
-        difficulty: 'intermediate',
-      },
-      {
-        name: 'Python',
-        slug: 'python',
-        description: 'Learn Python programming from basics to advanced',
-        icon: '🐍',
-        difficulty: 'beginner',
-      },
-      {
-        name: 'General Knowledge',
-        slug: 'general-knowledge',
-        description: 'World affairs, history, and current events',
-        icon: '🌍',
-        difficulty: 'beginner',
-      },
-      {
-        name: 'Aptitude',
-        slug: 'aptitude',
-        description: 'Logical reasoning and quantitative aptitude questions',
-        icon: '🧠',
-        difficulty: 'beginner',
-      },
-      {
-        name: 'Data Structures',
-        slug: 'data-structures',
-        description: 'Arrays, Trees, Graphs, and algorithmic thinking',
-        icon: '📊',
-        difficulty: 'advanced',
-      },
-      {
-        name: 'HTML & CSS',
-        slug: 'html-css',
-        description: 'Learn web design and frontend development',
-        icon: '🎨',
-        difficulty: 'beginner',
-      },
-      {
-        name: 'React',
-        slug: 'react',
-        description: 'Master React and modern JavaScript frameworks',
-        icon: '⚛️',
-        difficulty: 'intermediate',
-      },
-      {
-        name: 'SQL',
-        slug: 'sql',
-        description: 'Learn database queries and SQL fundamentals',
-        icon: '🗄️',
-        difficulty: 'beginner',
-      },
-      {
-        name: 'Mathematics',
-        slug: 'mathematics',
-        description: 'Test your mathematical knowledge and problem-solving',
-        icon: '🔢',
-        difficulty: 'intermediate',
-      },
-      {
-        name: 'English',
-        slug: 'english',
-        description: 'Improve grammar, vocabulary, and comprehension skills',
-        icon: '📚',
-        difficulty: 'beginner',
-      },
+      { name: "JavaScript", slug: "javascript", description: "Test your JavaScript fundamentals and ES6+ features", icon: "⚡", difficulty: "intermediate" },
+      { name: "Python", slug: "python", description: "Learn Python programming from basics to advanced", icon: "🐍", difficulty: "beginner" },
+      { name: "General Knowledge", slug: "general-knowledge", description: "World affairs, history, and current events", icon: "🌍", difficulty: "beginner" },
+      { name: "Aptitude", slug: "aptitude", description: "Logical reasoning and quantitative aptitude questions", icon: "🧠", difficulty: "beginner" },
+      { name: "Data Structures", slug: "data-structures", description: "Arrays, Trees, Graphs, and algorithmic thinking", icon: "📊", difficulty: "advanced" },
+      { name: "HTML & CSS", slug: "html-css", description: "Learn web design and frontend development", icon: "🎨", difficulty: "beginner" },
+      { name: "React", slug: "react", description: "Master React and modern JavaScript frameworks", icon: "⚛️", difficulty: "intermediate" },
+      { name: "SQL", slug: "sql", description: "Learn database queries and SQL fundamentals", icon: "🗄️", difficulty: "beginner" },
+      { name: "Mathematics", slug: "mathematics", description: "Test your mathematical knowledge and problem-solving", icon: "🔢", difficulty: "intermediate" },
+      { name: "English", slug: "english", description: "Improve grammar, vocabulary, and comprehension skills", icon: "📚", difficulty: "beginner" },
     ];
 
-    for (const topic of topics) {
+    for (const t of topics) {
       await query(
-        `INSERT INTO topics (name, slug, description, icon, difficulty) 
-         VALUES ($1, $2, $3, $4, $5)`,
-        [topic.name, topic.slug, topic.description, topic.icon, topic.difficulty]
+        `INSERT INTO topics (name, slug, description, icon, difficulty, is_active)
+         VALUES ($1, $2, $3, $4, $5, true)
+         ON CONFLICT (slug) DO NOTHING`,
+        [t.name, t.slug, t.description, t.icon, t.difficulty]
       );
     }
 
-    console.log('✅ Topics seeded');
+    console.log("✅ Topics seeded");
 
-    // Get topic IDs
+    // Helper to get topic id by slug
     const getTopicId = async (slug: string) => {
-      const result = await query(`SELECT id FROM topics WHERE slug = $1`, [slug]);
+      const result = await query(`SELECT id FROM topics WHERE slug = $1 LIMIT 1`, [slug]);
+      if (result.rowCount === 0) throw new Error(`Topic not found for slug: ${slug}`);
       return result.rows[0].id;
     };
 
-    const jsTopicId = await getTopicId('javascript');
-    const pythonTopicId = await getTopicId('python');
-    const gkTopicId = await getTopicId('general-knowledge');
-    const aptTopicId = await getTopicId('aptitude');
-    const dsTopicId = await getTopicId('data-structures');
-    const htmlCssTopicId = await getTopicId('html-css');
-    const reactTopicId = await getTopicId('react');
-    const sqlTopicId = await getTopicId('sql');
-    const mathTopicId = await getTopicId('mathematics');
-    const englishTopicId = await getTopicId('english');
+    // fetch IDs
+    const jsTopicId = await getTopicId("javascript");
+    const pythonTopicId = await getTopicId("python");
+    const gkTopicId = await getTopicId("general-knowledge");
+    const aptTopicId = await getTopicId("aptitude");
+    const dsTopicId = await getTopicId("data-structures");
+    const htmlCssTopicId = await getTopicId("html-css");
+    const reactTopicId = await getTopicId("react");
+    const sqlTopicId = await getTopicId("sql");
+    const mathTopicId = await getTopicId("mathematics");
+    const englishTopicId = await getTopicId("english");
 
-    // JAVASCRIPT QUESTIONS
+    // If questions table already has rows, skip inserting to avoid duplicates
+    const qCount = await query("SELECT COUNT(*) FROM questions");
+    if (parseInt(qCount.rows[0].count, 10) > 0) {
+      console.log("✅ Questions already present, skipping question seeding.");
+      return;
+    }
+
+    // ---------- QUESTION ARRAYS (as you provided) ----------
     const jsQuestions = [
       {
         question: 'What is the output of: console.log(typeof null)?',
@@ -192,7 +146,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // PYTHON QUESTIONS
     const pythonQuestions = [
       {
         question: 'Which keyword is used to create a function in Python?',
@@ -266,7 +219,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // GENERAL KNOWLEDGE QUESTIONS
     const gkQuestions = [
       {
         question: 'What is the capital of Australia?',
@@ -340,7 +292,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // APTITUDE QUESTIONS
     const aptQuestions = [
       {
         question: 'If a train travels 60 km in 45 minutes, what is its speed in km/h?',
@@ -414,7 +365,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // DATA STRUCTURES QUESTIONS
     const dsQuestions = [
       {
         question: 'What is the time complexity of binary search?',
@@ -488,7 +438,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // HTML & CSS QUESTIONS
     const htmlCssQuestions = [
       {
         question: 'What does HTML stand for?',
@@ -562,7 +511,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // REACT QUESTIONS
     const reactQuestions = [
       {
         question: 'What is React?',
@@ -636,7 +584,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // SQL QUESTIONS
     const sqlQuestions = [
       {
         question: 'What does SQL stand for?',
@@ -710,7 +657,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // MATHEMATICS QUESTIONS
     const mathQuestions = [
       {
         question: 'What is the value of π (pi) approximately?',
@@ -784,7 +730,6 @@ export const seedDatabase = async () => {
       },
     ];
 
-    // ENGLISH QUESTIONS
     const englishQuestions = [
       {
         question: 'Which of these is a noun?',
@@ -858,6 +803,8 @@ export const seedDatabase = async () => {
       },
     ];
 
+    // ---------- END QUESTION ARRAYS ----------
+
     // Insert all questions
     const questionSets = [
       { id: jsTopicId, questions: jsQuestions },
@@ -882,10 +829,23 @@ export const seedDatabase = async () => {
       }
     }
 
-    console.log('✅ Questions seeded');
-    console.log('🎉 Database seeding complete! 10 topics with 100 questions added.');
+    console.log("✅ Questions seeded");
+    console.log("🎉 Database seeding complete! 10 topics with 100 questions added.");
   } catch (error) {
-    console.error('❌ Seeding failed:', error);
+    console.error("❌ Seeding failed:", error);
     throw error;
   }
 };
+
+// If running seed directly: node dist/utils/seedData.js
+if (require.main === module) {
+  seedDatabase()
+    .then(() => {
+      console.log("Seed finished");
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("Seed error:", err);
+      process.exit(1);
+    });
+}
