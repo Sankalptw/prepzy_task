@@ -1,163 +1,105 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { initializeDatabase } from './config/database';
-import { seedDatabase } from './utils/seedData';
-import authRoutes from './routes/authRoutes';
-import topicRoutes from './routes/topicRoutes';
-import quizRoutes from './routes/quizRoutes';
-import leaderboardRoutes from './routes/leaderboardRoutes';
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { initializeDatabase } from "./config/database";
+import { seedDatabase } from "./utils/seedData";
+import authRoutes from "./routes/authRoutes";
+import topicRoutes from "./routes/topicRoutes";
+import quizRoutes from "./routes/quizRoutes";
+import leaderboardRoutes from "./routes/leaderboardRoutes";
 
-// Load environment variables FIRST
+// Load env vars
 dotenv.config();
-
-console.log('🚀 Starting Smart Quiz Arena Backend...');
-console.log('📋 Environment check:');
-console.log('   NODE_ENV:', process.env.NODE_ENV || 'development');
-console.log('   PORT:', process.env.PORT || 7000);
-console.log('   DB_HOST:', process.env.DB_HOST || 'NOT SET');
-console.log('   DB_NAME:', process.env.DB_NAME || 'NOT SET');
-console.log('   JWT_SECRET:', process.env.JWT_SECRET ? 'SET ✓' : 'NOT SET ✗');
 
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// CORS Configuration
+// ✅ Allowed frontend URLs
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
   "http://localhost:3000",
   "https://prepzy-task-frontend-1.onrender.com"
 ];
 
+// ✅ CORS configuration (fixed)
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ CORS blocked:", origin);
-        callback(new Error("Not allowed by CORS"));
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true); // allow server-side or curl
       }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log("❌ CORS blocked:", origin);
+      return callback(new Error("CORS Not Allowed"));
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// Handle OPTIONS preflight
+// ✅ Handle OPTIONS request
 app.options("*", cors());
 
-
-// Body Parsers
+// ✅ Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request Logger
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`📨 ${req.method} ${req.path}`);
+// ✅ Logging
+app.use((req, res, next) => {
+  console.log(`📨 ${req.method} ${req.url}`);
   next();
 });
 
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-  });
-});
+// ✅ Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/topics", topicRoutes);
+app.use("/api/quiz", quizRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
 
-// Root endpoint
-app.get('/', (req: Request, res: Response) => {
+// ✅ Root
+app.get("/", (req, res) => {
   res.json({
-    message: 'Welcome to Smart Quiz Arena API',
-    version: '1.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      topics: '/api/topics',
-      quiz: '/api/quiz',
-      leaderboard: '/api/leaderboard',
-      health: '/health',
-    },
+    message: "Smart Quiz Arena backend running 🚀",
   });
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/topics', topicRoutes);
-app.use('/api/quiz', quizRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
+// ✅ Health
+app.get("/health", (req, res) =>
+  res.json({ status: "UP", time: new Date().toISOString() })
+);
 
-// 404 Handler
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found',
-    path: req.path,
-  });
-});
+// ✅ 404
+app.use((req, res) =>
+  res.status(404).json({ success: false, message: "Route Not Found" })
+);
 
-// Global Error Handler
+// ✅ Error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('❌ Global error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
-  });
+  console.error("❌ Server Error:", err.message);
+  res.status(500).json({ success: false, error: "Server Error" });
 });
 
-// Start Server Function
+// ✅ Boot server
 const startServer = async () => {
   try {
-    console.log('\n🔄 Initializing database...');
+    console.log("⏳ Connecting DB...");
     await initializeDatabase();
-    console.log('✅ Database initialized successfully\n');
+    console.log("✅ DB Connected");
 
-    console.log('🌱 Seeding database with initial data...');
     await seedDatabase();
-    console.log('✅ Database seeded successfully\n');
+    console.log("✅ DB Seeded");
 
     app.listen(PORT, () => {
-      console.log('=================================');
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📡 API: http://localhost:${PORT}`);
-      console.log(`🏥 Health: http://localhost:${PORT}/health`);
-      console.log('=================================');
-      console.log('---------------------------------');
-      console.log('\n✨ Ready to accept requests!\n');
+      console.log(`🚀 Server LIVE on port ${PORT}`);
     });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    console.error('Error details:', error);
+  } catch (err) {
+    console.error("❌ Startup Error:", err);
     process.exit(1);
   }
 };
 
-// Start the server
-console.log('\n🎬 Calling startServer()...\n');
-startServer().catch((error) => {
-  console.error('❌ Unhandled error in startServer:', error);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
-});
+startServer();
