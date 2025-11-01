@@ -23,12 +23,29 @@ const app = express();
 const PORT = process.env.PORT || 7000;
 
 // CORS Configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "https://prepzy-task-frontend-1.onrender.com"
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ CORS blocked:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
+// Handle OPTIONS preflight
+app.options("*", cors());
+
 
 // Body Parsers
 app.use(express.json());
@@ -107,6 +124,7 @@ const startServer = async () => {
       console.log(`📡 API: http://localhost:${PORT}`);
       console.log(`🏥 Health: http://localhost:${PORT}/health`);
       console.log('=================================');
+      console.log('---------------------------------');
       console.log('\n✨ Ready to accept requests!\n');
     });
   } catch (error) {
