@@ -1,4 +1,3 @@
-// src/config/database.ts
 import dotenv from "dotenv";
 import pkg from "pg";
 const { Pool } = pkg;
@@ -71,17 +70,12 @@ async function waitForDB(retries = 6) {
   throw new Error("❌ DB connection failed after retries");
 }
 
-/**
- * Initialize tables and extensions (safe: IF NOT EXISTS).
- * Run this before any seeding or queries that require tables.
- */
+
 export const initializeTables = async () => {
-  // Make sure DB is reachable first
   await waitForDB();
 
   console.log("📦 Creating extensions and tables (if missing)...");
 
-  // You used gen_random_uuid() earlier — create pgcrypto extension
   await query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
   // Create users
@@ -170,7 +164,6 @@ export const initializeTables = async () => {
 };
 
 export const initializeDatabase = async () => {
-  // kept for backward compatibility: waits for DB and optionally does other steps
   await waitForDB();
 };
 

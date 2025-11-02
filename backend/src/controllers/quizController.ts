@@ -6,17 +6,11 @@ import { getQuestionsForQuiz, getQuestionsByIds } from '../models/questionModel'
 import { createQuizAttempt, saveUserAnswer, getUserQuizHistory, getUserStats } from '../models/quizModel';
 import { query } from '../config/database';
 
-/**
- * ADD QUESTION
- * Add a new question to a topic
- * 
- * POST /api/quiz/questions
- */
+
 export const addQuestion = async (req: AuthRequest, res: Response) => {
   try {
     const { topic_slug, question, options, correct_answer, explanation, difficulty } = req.body;
 
-    // Validation
     if (!topic_slug || !question || !options || correct_answer === undefined) {
       return res.status(400).json({
         success: false,
@@ -38,7 +32,6 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Get topic
     const topic = await getTopicBySlug(topic_slug);
     if (!topic) {
       return res.status(404).json({
@@ -47,7 +40,6 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Insert question
     const questionId = uuidv4();
     const result = await query(
       `INSERT INTO questions (id, topic_id, question, options, correct_answer, explanation, difficulty, created_at)
@@ -79,12 +71,7 @@ export const addQuestion = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * START QUIZ
- * Get random questions for a topic
- * 
- * GET /api/quiz/start/:topicSlug
- */
+
 export const startQuiz = async (req: AuthRequest, res: Response) => {
   try {
     const { topicSlug } = req.params;
@@ -100,7 +87,6 @@ export const startQuiz = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Get random questions (without correct answers)
     const questions = await getQuestionsForQuiz(topic.id, limit);
 
     if (questions.length === 0) {
@@ -136,12 +122,7 @@ export const startQuiz = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * SUBMIT QUIZ
- * Calculate score and save results
- * 
- * POST /api/quiz/submit
- */
+
 export const submitQuiz = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -272,12 +253,7 @@ export const submitQuiz = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * GET QUIZ HISTORY
- * Get user's past quiz attempts
- * 
- * GET /api/quiz/history
- */
+
 export const getQuizHistory = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
@@ -305,12 +281,7 @@ export const getQuizHistory = async (req: AuthRequest, res: Response) => {
   }
 };
 
-/**
- * GET USER STATS
- * Get user's overall statistics
- * 
- * GET /api/quiz/stats
- */
+
 export const getStats = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {

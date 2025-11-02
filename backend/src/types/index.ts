@@ -1,6 +1,5 @@
 import { Request } from 'express';
 
-// USER TYPES
 export interface User {
   id: string;
   username: string;
@@ -10,7 +9,6 @@ export interface User {
   updated_at: Date;
 }
 
-// What we send to frontend (never send password_hash!)
 export interface UserResponse {
   id: string;
   username: string;
@@ -18,7 +16,6 @@ export interface UserResponse {
   created_at: Date;
 }
 
-// REQUEST BODY TYPES
 export interface SignupRequest {
   username: string;
   email: string;
@@ -30,15 +27,12 @@ export interface LoginRequest {
   password: string;
 }
 
-// JWT PAYLOAD
-// What we store inside the JWT token
 export interface JWTPayload {
   userId: string;
   email: string;
   username: string;
 }
 
-// AUTHENTICATION RESPONSE
 export interface AuthResponse {
   success: boolean;
   message: string;
@@ -46,27 +40,22 @@ export interface AuthResponse {
   token?: string;
 }
 
-// ERROR RESPONSE
 export interface ErrorResponse {
   success: false;
   message: string;
   errors?: string[];
 }
 
-// SUCCESS RESPONSE
 export interface SuccessResponse<T = any> {
   success: true;
   message: string;
   data?: T;
 }
 
-// Express Request with authenticated user
-// After JWT verification, we attach user to request
 export interface AuthRequest extends Request {
   user?: JWTPayload;
 }
 
-// TOPIC TYPES
 export interface Topic {
   id: string;
   name: string;
@@ -91,7 +80,6 @@ export interface Question {
   created_at: Date;
 }
 
-// Question without correct answer (sent to frontend during quiz)
 export interface QuestionForQuiz {
   id: string;
   question: string;
@@ -111,7 +99,6 @@ export interface QuizAttempt {
   completed_at: Date;
 }
 
-// USER ANSWER TYPES
 export interface UserAnswer {
   id: string;
   attempt_id: string;
@@ -122,7 +109,6 @@ export interface UserAnswer {
   created_at: Date;
 }
 
-// QUIZ SUBMISSION
 export interface QuizSubmission {
   topic_slug: string;
   answers: {
@@ -132,7 +118,6 @@ export interface QuizSubmission {
   }[];
 }
 
-// QUIZ RESULT
 export interface QuizResult {
   attempt_id: string;
   score: number;

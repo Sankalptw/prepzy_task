@@ -14,7 +14,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
 
-  // Initialize theme on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -25,7 +24,6 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Toggle theme function
   const toggleTheme = () => {
     setIsDark(!isDark);
     if (!isDark) {

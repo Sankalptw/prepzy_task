@@ -2,10 +2,7 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { query } from '../config/database';
 
-/**
- * TEST ENDPOINT - Direct insert to database
- * POST /api/topics/test
- */
+
 export const testCreateTopic = async (req: Request, res: Response) => {
   try {
     console.log('TEST: Received request body:', req.body);
@@ -49,9 +46,7 @@ export const testCreateTopic = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * CREATE TOPIC - Production version
- */
+
 export const createTopic = async (req: Request, res: Response) => {
   try {
     const { title, slug, description, icon, difficulty } = req.body;

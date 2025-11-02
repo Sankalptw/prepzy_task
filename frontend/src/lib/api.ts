@@ -1,14 +1,8 @@
 import axios from 'axios';
 import { getToken } from './auth';
-/**
- * API Configuration
- * Central place for all API calls
- */
 
-// Base API URL - update this when deployed
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://srv-d42otmer433s73drh88g.onrender.com';
 
-// Create axios instance with defaults
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -16,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add auth token to all requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -30,12 +23,10 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle common errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -44,9 +35,7 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * AUTH API CALLS
- */
+
 export const authAPI = {
   signup: async (username: string, email: string, password: string) => {
     const response = await api.post('/api/auth/signup', {
@@ -76,9 +65,7 @@ export const authAPI = {
   },
 };
 
-/**
- * TOPICS API CALLS
- */
+
 export const topicsAPI = {
   getAll: async () => {
     const response = await api.get('/api/topics');
@@ -91,9 +78,7 @@ export const topicsAPI = {
   },
 };
 
-/**
- * QUIZ API CALLS
- */
+
 export const quizAPI = {
   start: async (topicSlug: string, limit: number = 10) => {
     const response = await api.get(`/api/quiz/start/${topicSlug}`, {
@@ -131,9 +116,7 @@ export const quizAPI = {
     return response.data;
   },
 };
-/**
- * LEADERBOARD API CALLS
- */
+
 export const leaderboardAPI = {
   getGlobal: async (limit: number = 10) => {
     const response = await api.get('/api/leaderboard/global', {

@@ -1,9 +1,7 @@
 import { query } from '../config/database';
 import { QuizAttempt, UserAnswer } from '../types';
 
-/**
- * Create a new quiz attempt
- */
+
 export const createQuizAttempt = async (
   userId: string,
   topicId: string,
@@ -21,9 +19,7 @@ export const createQuizAttempt = async (
   return result.rows[0];
 };
 
-/**
- * Save user answer
- */
+
 export const saveUserAnswer = async (
   attemptId: string,
   questionId: string,
@@ -40,9 +36,6 @@ export const saveUserAnswer = async (
   return result.rows[0];
 };
 
-/**
- * Get user's quiz history
- */
 export const getUserQuizHistory = async (userId: string, limit: number = 10) => {
   const result = await query(`
     SELECT 
@@ -60,9 +53,7 @@ export const getUserQuizHistory = async (userId: string, limit: number = 10) => 
   return result.rows;
 };
 
-/**
- * Get user's overall statistics
- */
+
 export const getUserStats = async (userId: string) => {
   const result = await query(`
     SELECT 

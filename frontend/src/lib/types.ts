@@ -1,7 +1,4 @@
-/**
- * Frontend TypeScript Types
- * Matches backend API responses
- */
+
 
 export interface User {
   id: string;

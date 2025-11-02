@@ -8,7 +8,6 @@ export const authenticate = async (
   next: NextFunction
 ) => {
   try {
-    // 1. Get token from Authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -18,7 +17,6 @@ export const authenticate = async (
       });
     }
 
-    // 2. Check if token starts with "Bearer "
     if (!authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -26,8 +24,7 @@ export const authenticate = async (
       });
     }
 
-    // 3. Extract token (remove "Bearer " prefix)
-    const token = authHeader.substring(7); // "Bearer " is 7 characters
+    const token = authHeader.substring(7); 
 
     if (!token) {
       return res.status(401).json({
@@ -36,21 +33,13 @@ export const authenticate = async (
       });
     }
 
-    // 4. Verify token using our utility function
-    // This checks:
-    // - Token signature is valid (not tampered)
-    // - Token is not expired
-    // - Token was created by our server
+    
     const decoded = verifyToken(token);
 
-    // 5. Attach user info to request object
-    // Now any controller can access req.user
+   
     req.user = decoded;
-
-    // 6. Pass control to next middleware/controller
     next();
   } catch (error: any) {
-    // Token verification failed
     return res.status(401).json({
       success: false,
       message: error.message || 'Invalid or expired token',
@@ -58,13 +47,7 @@ export const authenticate = async (
   }
 };
 
-/**
- * OPTIONAL AUTHENTICATION
- * For routes that work with or without login
- * Example: Public leaderboard (shows more if logged in)
- * 
- * Similar to authenticate but doesn't fail if no token
- */
+
 export const optionalAuth = async (
   req: AuthRequest,
   res: Response,
@@ -73,7 +56,6 @@ export const optionalAuth = async (
   try {
     const authHeader = req.headers.authorization;
 
-    // If no token, just continue without user info
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
@@ -87,7 +69,6 @@ export const optionalAuth = async (
 
     next();
   } catch (error) {
-    // If token is invalid, continue without user (don't fail)
     next();
   }
 };

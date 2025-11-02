@@ -20,7 +20,6 @@ export default function ResultsPage() {
       return;
     }
 
-    // Get result from sessionStorage (passed from quiz page)
     const storedResult = sessionStorage.getItem('quizResult');
     if (storedResult) {
       setResult(JSON.parse(storedResult));

@@ -1,9 +1,7 @@
 import { query } from '../config/database';
 import { Question, QuestionForQuiz } from '../types';
 
-/**
- * Get questions for a topic (for quiz taking - without correct answers)
- */
+
 export const getQuestionsForQuiz = async (
   topicId: string,
   limit: number = 10,
@@ -29,9 +27,7 @@ export const getQuestionsForQuiz = async (
   return result.rows;
 };
 
-/**
- * Get full question details (including correct answer)
- */
+
 export const getQuestionById = async (id: string): Promise<Question | null> => {
   const result = await query(
     'SELECT * FROM questions WHERE id = $1',
@@ -41,9 +37,7 @@ export const getQuestionById = async (id: string): Promise<Question | null> => {
   return result.rows[0] || null;
 };
 
-/**
- * Get multiple questions by IDs
- */
+
 export const getQuestionsByIds = async (ids: string[]): Promise<Question[]> => {
   const result = await query(
     'SELECT * FROM questions WHERE id = ANY($1)',
@@ -53,9 +47,7 @@ export const getQuestionsByIds = async (ids: string[]): Promise<Question[]> => {
   return result.rows;
 };
 
-/**
- * Get question statistics (how many users got it right)
- */
+
 export const getQuestionStats = async (questionId: string) => {
   const result = await query(`
     SELECT 

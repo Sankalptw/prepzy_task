@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import { query } from '../config/database';
 
-/**
- * GET GLOBAL LEADERBOARD
- * Top players by total score
- */
+
 export const getGlobalLeaderboard = async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
@@ -38,9 +35,7 @@ export const getGlobalLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * GET TODAY'S LEADERBOARD
- */
+
 export const getTodayLeaderboard = async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
@@ -75,9 +70,7 @@ export const getTodayLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * GET TOPIC LEADERBOARD
- */
+
 export const getTopicLeaderboard = async (req: Request, res: Response) => {
   try {
     const { topicId } = req.params;
@@ -113,9 +106,7 @@ export const getTopicLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * GET USER RANK
- */
+
 export const getUserRank = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;

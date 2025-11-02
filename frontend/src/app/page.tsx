@@ -8,7 +8,6 @@ export default function Home() {
   const { user } = useAuth();
   const [isDark, setIsDark] = useState(false);
 
-  // Initialize theme on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -19,7 +18,6 @@ export default function Home() {
     }
   }, []);
 
-  // Toggle theme function
   const toggleTheme = () => {
     setIsDark(!isDark);
     if (!isDark) {

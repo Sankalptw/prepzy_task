@@ -4,7 +4,6 @@ import { query } from "../config/database";
 
 const router = Router();
 
-/** List all topics */
 router.get("/", async (req: Request, res: Response) => {
   try {
     const result = await query(
@@ -29,7 +28,6 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-/** Get topic by slug */
 router.get("/:slug", async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
@@ -62,12 +60,10 @@ router.get("/:slug", async (req: Request, res: Response) => {
   }
 });
 
-/** Create topic */
 router.post("/", async (req: Request, res: Response) => {
   try {
     const { title, slug, description, icon, difficulty } = req.body;
 
-    // Validation
     if (!title || !slug) {
       return res.status(400).json({ 
         success: false, 
@@ -75,7 +71,6 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // Check if slug already exists
     const existing = await query(
       "SELECT id FROM topics WHERE slug = $1",
       [slug]
@@ -88,7 +83,6 @@ router.post("/", async (req: Request, res: Response) => {
       });
     }
 
-    // Insert into database
     const topicId = uuidv4();
     const result = await query(
       `INSERT INTO topics (id, name, slug, description, icon, difficulty, is_active, created_at)
@@ -120,7 +114,6 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-/** Update topic */
 router.put("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -161,7 +154,6 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 });
 
-/** Delete topic (soft delete) */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

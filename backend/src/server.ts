@@ -1,4 +1,3 @@
-// src/server.ts
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import { initializeDatabase } from "./config/database";
@@ -8,21 +7,17 @@ import topicRoutes from "./routes/topicRoutes";
 import quizRoutes from "./routes/quizRoutes";
 import leaderboardRoutes from "./routes/leaderboardRoutes";
 
-// Load env first
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 7000;
 
-// Allowed Origins
 const FRONTEND_URL = (process.env.FRONTEND_URL || "https://prepzy-task-frontend-1.onrender.com").trim();
 const LOCAL_URL = "http://localhost:3000";
 
-// ---------- CORS Middleware ----------
 app.use((req: Request, res: Response, next: NextFunction) => {
   const originHeader = (req.headers.origin || "").toString();
 
-  // Allow server-side/no-origin + allowed origins
   if (!originHeader || originHeader === FRONTEND_URL || originHeader === LOCAL_URL) {
     if (originHeader) {
       res.setHeader("Access-Control-Allow-Origin", originHeader);
@@ -47,24 +42,20 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   console.warn("❌ CORS Blocked:", originHeader);
   return res.status(403).json({ success: false, message: "CORS blocked" });
 });
-// --------------------------------------------------
 
-// ✅ Ensure Express handles OPTIONS too
 app.options("*", (req, res) => {
   res.sendStatus(200);
 });
 
-// Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logger
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`📨 ${req.method} ${req.url} | Origin: ${req.headers.origin || "none"}`);
   next();
 });
 
-// Routes
+
 app.get("/health", (req: Request, res: Response) =>
   res.json({ status: "UP", time: new Date().toISOString() })
 );
@@ -82,12 +73,12 @@ app.use("/api/topics", topicRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 
-// 404 handler
+
 app.use((req: Request, res: Response) =>
   res.status(404).json({ success: false, message: "Route not found", path: req.path })
 );
 
-// Global error handler
+
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error("❌ Global error:", err);
   res.status(500).json({
@@ -97,7 +88,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server
+
 const startServer = async () => {
   try {
     console.log("🔄 Connecting to DB...");

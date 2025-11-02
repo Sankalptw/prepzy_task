@@ -32,7 +32,6 @@ export const signup = async (
       });
     }
 
-    // Validate email format
     if (!isValidEmail(email)) {
       return res.status(400).json({
         success: false,
@@ -40,7 +39,6 @@ export const signup = async (
       });
     }
 
-    // Validate username
     const usernameValidation = isValidUsername(username);
     if (!usernameValidation.valid) {
       return res.status(400).json({
@@ -50,7 +48,6 @@ export const signup = async (
       });
     }
 
-    // Validate password strength
     const passwordValidation = isValidPassword(password);
     if (!passwordValidation.valid) {
       return res.status(400).json({
@@ -60,8 +57,6 @@ export const signup = async (
       });
     }
 
-    // 2. CHECK IF USER ALREADY EXISTS
-    // We check both email and username to give specific error messages
     const emailTaken = await emailExists(email);
     if (emailTaken) {
       return res.status(409).json({
@@ -78,22 +73,16 @@ export const signup = async (
       });
     }
 
-    // 3. HASH PASSWORD
-    // NEVER store plain passwords!
     const passwordHash = await hashPassword(password);
 
-    // 4. CREATE USER IN DATABASE
     const newUser = await createUser(username, email, passwordHash);
 
-    // 5. GENERATE JWT TOKEN
     const token = generateToken({
       userId: newUser.id,
       email: newUser.email,
       username: newUser.username,
     });
 
-    // 6. SEND RESPONSE
-    // Remove sensitive data (password_hash) before sending
     res.status(201).json({
       success: true,
       message: 'Account created successfully',
@@ -110,20 +99,7 @@ export const signup = async (
   }
 };
 
-/**
- * LOGIN CONTROLLER
- * Handles user authentication
- * 
- * Steps:
- * 1. Validate input
- * 2. Find user by email
- * 3. Verify password
- * 4. Generate JWT token
- * 5. Send response with user data + token
- * 
- * POST /api/auth/login
- * Body: { email, password }
- */
+
 export const login = async (
   req: Request<{}, {}, LoginRequest>,
   res: Response
@@ -131,7 +107,6 @@ export const login = async (
   try {
     const { email, password } = req.body;
 
-    // 1. VALIDATE INPUT
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -139,19 +114,15 @@ export const login = async (
       });
     }
 
-    // 2. FIND USER BY EMAIL
     const user = await findUserByEmail(email);
 
     if (!user) {
-      // Don't reveal whether email exists (security)
-      // Same error message for wrong email or password
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
       });
     }
 
-    // 3. VERIFY PASSWORD
     const isPasswordCorrect = await comparePassword(password, user.password_hash);
 
     if (!isPasswordCorrect) {
@@ -161,14 +132,12 @@ export const login = async (
       });
     }
 
-    // 4. GENERATE JWT TOKEN
     const token = generateToken({
       userId: user.id,
       email: user.email,
       username: user.username,
     });
 
-    // 5. SEND RESPONSE
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -187,7 +156,6 @@ export const login = async (
 
 export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
-    // req.user was set by authenticate middleware
     if (!req.user) {
       return res.status(401).json({
         success: false,
@@ -195,8 +163,6 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Fetch fresh user data from database
-    // Why? User might have updated their profile
     const user = await findUserById(req.user.userId);
 
     if (!user) {
